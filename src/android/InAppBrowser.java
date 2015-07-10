@@ -26,6 +26,7 @@ import android.provider.Browser;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.http.SslError;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -44,6 +45,7 @@ import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.SslErrorHandler;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -752,6 +754,14 @@ public class InAppBrowser extends CordovaPlugin {
         public InAppBrowserClient(CordovaWebView webView, EditText mEditText) {
             this.webView = webView;
             this.edittext = mEditText;
+        }
+        
+        /**
+         * Ignore SSL Certificate errors
+         */
+        @Override
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            handler.proceed();
         }
 
         /**
