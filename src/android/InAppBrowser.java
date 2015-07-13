@@ -785,7 +785,7 @@ public class InAppBrowser extends CordovaPlugin {
                 if(url.startsWith("https:")) {
                     try {
                         addTrustedCA();
-                    catch (IOException|NoSuchAlgorithmException|CertificateException|KeyManagementException|KeyStoreException ex) {
+                    } catch (IOException|NoSuchAlgorithmException|CertificateException|KeyManagementException|KeyStoreException ex) {
                         Log.d(LOG_TAG, "Unable to add trusted CA: " + ex.toString());
                     }
                 }
