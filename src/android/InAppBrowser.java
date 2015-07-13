@@ -131,6 +131,16 @@ public class InAppBrowser extends CordovaPlugin {
             final HashMap<String, Boolean> features = parseFeature(args.optString(2));
 
             Log.d(LOG_TAG, "target = " + target);
+            Log.d(LOG_TAG, "url = " + url);
+
+            if(url.startsWith("https:")) {
+                // Trust any supplied certificate for SSL connections
+                try {
+                    addTrustedCA();
+                } catch (Exception e) {
+                    Log.d(LOG_TAG, "Unable to add trusted CA: " + e.toString());
+                }
+            }
 
             this.cordova.getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -514,15 +524,6 @@ public class InAppBrowser extends CordovaPlugin {
             }
         }
 
-        if(url.startsWith("https:")) {
-            // Trust any supplied certificate for SSL connections
-            try {
-                addTrustedCA();
-            } catch (Exception e) {
-                Log.d(LOG_TAG, "Unable to add trusted CA: " + e.toString());
-            }
-        }
-
         final CordovaWebView thatWebView = this.webView;
 
         // Create dialog in new thread
@@ -760,8 +761,9 @@ public class InAppBrowser extends CordovaPlugin {
             }
         }
     }
-    
+
     private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
+        Log.d(LOG_TAG, "Adding trusted certificate if it exists");
         // Load CAs from an InputStream
         // (could be from a resource or ByteArrayInputStream or ...)
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -773,6 +775,7 @@ public class InAppBrowser extends CordovaPlugin {
             Log.d(LOG_TAG, "No trusted certificate authorities supplied");
             return;
         }
+        Log.d(LOG_TAG, "Found trusted certificate");
         InputStream caInput = new BufferedInputStream(fileInput);
         Certificate ca;
         try {
@@ -799,6 +802,7 @@ public class InAppBrowser extends CordovaPlugin {
 
         // Set up HttpsURLConnection so that default SSL connections use the
         // socket factory we've made that trusts our certificate authority
+        Log.d(LOG_TAG, "Setting the default SSLSocketFactory");
         HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
     }
 
