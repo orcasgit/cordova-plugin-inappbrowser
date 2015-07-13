@@ -890,7 +890,7 @@ public class InAppBrowser extends CordovaPlugin {
             }
         }
 
-        private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
+        private void addTrustedCA() throws IOException, NoSuchAlgorithmException, KeyManagementException, KeyStoreException {
             // Load CAs from an InputStream
             // (could be from a resource or ByteArrayInputStream or ...)
             FileInputStream fileInput;
