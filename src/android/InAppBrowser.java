@@ -901,6 +901,7 @@ public class InAppBrowser extends CordovaPlugin {
                 return;
             }
             InputStream caInput = new BufferedInputStream(fileInput);
+            KeyStore keyStore;
             try {
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 Certificate ca = cf.generateCertificate(caInput);
@@ -908,7 +909,7 @@ public class InAppBrowser extends CordovaPlugin {
                 caInput.close();
                 // Create a KeyStore containing our trusted CAs
                 String keyStoreType = KeyStore.getDefaultType();
-                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                keyStore = KeyStore.getInstance(keyStoreType);
                 keyStore.load(null, null);
                 keyStore.setCertificateEntry("ca", ca);
             } catch (CertificateException e) {
