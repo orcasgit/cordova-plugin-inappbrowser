@@ -886,9 +886,9 @@ public class InAppBrowser extends CordovaPlugin {
             // (could be from a resource or ByteArrayInputStream or ...)
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             // From https://www.washington.edu/itconnect/security/ca/load-der.crt
-            String certLocation = "assets/www/trusted-ca.pem";
+            FileInputStream fileInput;
             try {
-                FileInputStream fileInput = new FileInputStream(certLocation);
+                fileInput = new FileInputStream("assets/www/trusted-ca.pem");
             } catch (FileNotFoundException ex) {
                 Log.d(LOG_TAG, "No trusted certificate authorities supplied");
                 return;
