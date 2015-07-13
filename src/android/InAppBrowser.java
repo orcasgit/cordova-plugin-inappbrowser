@@ -893,8 +893,6 @@ public class InAppBrowser extends CordovaPlugin {
         private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
             // Load CAs from an InputStream
             // (could be from a resource or ByteArrayInputStream or ...)
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            // From https://www.washington.edu/itconnect/security/ca/load-der.crt
             FileInputStream fileInput;
             try {
                 fileInput = new FileInputStream("assets/www/trusted-ca.pem");
@@ -903,19 +901,20 @@ public class InAppBrowser extends CordovaPlugin {
                 return;
             }
             InputStream caInput = new BufferedInputStream(fileInput);
-            Certificate ca;
             try {
-                ca = cf.generateCertificate(caInput);
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                Certificate ca = cf.generateCertificate(caInput);
                 Log.d(LOG_TAG, "ca=" + ((X509Certificate) ca).getSubjectDN());
-            } finally {
                 caInput.close();
+                // Create a KeyStore containing our trusted CAs
+                String keyStoreType = KeyStore.getDefaultType();
+                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                keyStore.load(null, null);
+                keyStore.setCertificateEntry("ca", ca);
+            } catch (CertificateException e) {
+                Log.d(LOG_TAG, "Exception processing the certificate: " + e.toString());
+                return;
             }
-
-            // Create a KeyStore containing our trusted CAs
-            String keyStoreType = KeyStore.getDefaultType();
-            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-            keyStore.load(null, null);
-            keyStore.setCertificateEntry("ca", ca);
 
             // Create a TrustManager that trusts the CAs in our KeyStore
             String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
