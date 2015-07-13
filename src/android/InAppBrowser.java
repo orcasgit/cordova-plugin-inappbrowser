@@ -514,6 +514,15 @@ public class InAppBrowser extends CordovaPlugin {
             }
         }
 
+        if(url.startsWith("https:")) {
+            // Trust any supplied certificate for SSL connections
+            try {
+                addTrustedCA();
+            } catch (Exception e) {
+                Log.d(LOG_TAG, "Unable to add trusted CA: " + e.toString());
+            }
+        }
+
         final CordovaWebView thatWebView = this.webView;
 
         // Create dialog in new thread
@@ -654,13 +663,6 @@ public class InAppBrowser extends CordovaPlugin {
                     }
                 });
 
-                // Trust any supplied certificate for SSL connections
-                try {
-                    addTrustedCA();
-                } catch (Exception e) {
-                    Log.d(LOG_TAG, "Unable to add trusted CA: " + e.toString());
-                }
-
                 // WebView
                 inAppWebView = new WebView(cordova.getActivity());
                 inAppWebView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -757,6 +759,47 @@ public class InAppBrowser extends CordovaPlugin {
                 callbackContext = null;
             }
         }
+    }
+    
+    private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
+        // Load CAs from an InputStream
+        // (could be from a resource or ByteArrayInputStream or ...)
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        // From https://www.washington.edu/itconnect/security/ca/load-der.crt
+        FileInputStream fileInput;
+        try {
+            fileInput = new FileInputStream("assets/www/trusted-ca.pem");
+        } catch (FileNotFoundException ex) {
+            Log.d(LOG_TAG, "No trusted certificate authorities supplied");
+            return;
+        }
+        InputStream caInput = new BufferedInputStream(fileInput);
+        Certificate ca;
+        try {
+            ca = cf.generateCertificate(caInput);
+            Log.d(LOG_TAG, "ca=" + ((X509Certificate) ca).getSubjectDN());
+        } finally {
+            caInput.close();
+        }
+
+        // Create a KeyStore containing our trusted CAs
+        String keyStoreType = KeyStore.getDefaultType();
+        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+        keyStore.load(null, null);
+        keyStore.setCertificateEntry("ca", ca);
+
+        // Create a TrustManager that trusts the CAs in our KeyStore
+        String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+        tmf.init(keyStore);
+
+        // Create an SSLContext that uses our TrustManager
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, tmf.getTrustManagers(), null);
+
+        // Set up HttpsURLConnection so that default SSL connections use the
+        // socket factory we've made that trusts our certificate authority
+        HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
     }
 
     /**
@@ -888,47 +931,6 @@ public class InAppBrowser extends CordovaPlugin {
             } catch (JSONException ex) {
                 Log.d(LOG_TAG, "Should never happen");
             }
-        }
-
-        private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
-            // Load CAs from an InputStream
-            // (could be from a resource or ByteArrayInputStream or ...)
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            // From https://www.washington.edu/itconnect/security/ca/load-der.crt
-            FileInputStream fileInput;
-            try {
-                fileInput = new FileInputStream("assets/www/trusted-ca.pem");
-            } catch (FileNotFoundException ex) {
-                Log.d(LOG_TAG, "No trusted certificate authorities supplied");
-                return;
-            }
-            InputStream caInput = new BufferedInputStream(fileInput);
-            Certificate ca;
-            try {
-                ca = cf.generateCertificate(caInput);
-                Log.d(LOG_TAG, "ca=" + ((X509Certificate) ca).getSubjectDN());
-            } finally {
-                caInput.close();
-            }
-
-            // Create a KeyStore containing our trusted CAs
-            String keyStoreType = KeyStore.getDefaultType();
-            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-            keyStore.load(null, null);
-            keyStore.setCertificateEntry("ca", ca);
-
-            // Create a TrustManager that trusts the CAs in our KeyStore
-            String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
-            tmf.init(keyStore);
-
-            // Create an SSLContext that uses our TrustManager
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, tmf.getTrustManagers(), null);
-
-            // Set up HttpsURLConnection so that default SSL connections use the
-            // socket factory we've made that trusts our certificate authority
-            HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
         }
     }
 }
