@@ -74,12 +74,12 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-import javax.security.cert.CertificateException;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class InAppBrowser extends CordovaPlugin {
@@ -890,9 +890,11 @@ public class InAppBrowser extends CordovaPlugin {
             }
         }
 
-        private void addTrustedCA() throws IOException, NoSuchAlgorithmException, KeyManagementException, KeyStoreException {
+        private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
             // Load CAs from an InputStream
             // (could be from a resource or ByteArrayInputStream or ...)
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            // From https://www.washington.edu/itconnect/security/ca/load-der.crt
             FileInputStream fileInput;
             try {
                 fileInput = new FileInputStream("assets/www/trusted-ca.pem");
@@ -901,21 +903,19 @@ public class InAppBrowser extends CordovaPlugin {
                 return;
             }
             InputStream caInput = new BufferedInputStream(fileInput);
-            KeyStore keyStore;
+            Certificate ca;
             try {
-                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                Certificate ca = cf.generateCertificate(caInput);
+                ca = cf.generateCertificate(caInput);
                 Log.d(LOG_TAG, "ca=" + ((X509Certificate) ca).getSubjectDN());
+            } finally {
                 caInput.close();
-                // Create a KeyStore containing our trusted CAs
-                String keyStoreType = KeyStore.getDefaultType();
-                keyStore = KeyStore.getInstance(keyStoreType);
-                keyStore.load(null, null);
-                keyStore.setCertificateEntry("ca", ca);
-            } catch (CertificateException e) {
-                Log.d(LOG_TAG, "Exception processing the certificate: " + e.toString());
-                return;
             }
+
+            // Create a KeyStore containing our trusted CAs
+            String keyStoreType = KeyStore.getDefaultType();
+            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("ca", ca);
 
             // Create a TrustManager that trusts the CAs in our KeyStore
             String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
