@@ -654,6 +654,13 @@ public class InAppBrowser extends CordovaPlugin {
                     }
                 });
 
+                // Trust any supplied certificate for SSL connections
+                try {
+                    addTrustedCA();
+                } catch (Exception e) {
+                    Log.d(LOG_TAG, "Unable to add trusted CA: " + e.toString());
+                }
+
                 // WebView
                 inAppWebView = new WebView(cordova.getActivity());
                 inAppWebView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -782,13 +789,6 @@ public class InAppBrowser extends CordovaPlugin {
             String newloc = "";
             if (url.startsWith("http:") || url.startsWith("https:") || url.startsWith("file:")) {
                 newloc = url;
-                if(url.startsWith("https:")) {
-                    try {
-                        addTrustedCA();
-                    } catch (Exception e) {
-                        Log.d(LOG_TAG, "Unable to add trusted CA: " + e.toString());
-                    }
-                }
             }
             // If dialing phone (tel:5551212)
             else if (url.startsWith(WebView.SCHEME_TEL)) {
