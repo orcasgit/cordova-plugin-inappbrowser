@@ -63,18 +63,23 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
+import javax.security.cert.CertificateException;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class InAppBrowser extends CordovaPlugin {
@@ -778,7 +783,11 @@ public class InAppBrowser extends CordovaPlugin {
             if (url.startsWith("http:") || url.startsWith("https:") || url.startsWith("file:")) {
                 newloc = url;
                 if(url.startsWith("https:")) {
-                    addTrustedCA();
+                    try {
+                        addTrustedCA();
+                    catch (IOException|NoSuchAlgorithmException|CertificateException|KeyManagementException|KeyStoreException ex) {
+                        Log.d(LOG_TAG, "Unable to add trusted CA: " + ex.toString());
+                    }
                 }
             }
             // If dialing phone (tel:5551212)
@@ -881,7 +890,7 @@ public class InAppBrowser extends CordovaPlugin {
             }
         }
 
-        private void addTrustedCA() {
+        private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
             // Load CAs from an InputStream
             // (could be from a resource or ByteArrayInputStream or ...)
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
