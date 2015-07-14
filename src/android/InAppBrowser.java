@@ -838,18 +838,18 @@ public class InAppBrowser extends CordovaPlugin {
         }
 
         private class CheckSSLTask extends AsyncTask<SslErrorHandler, Void, Void> {
-            protected void doInBackground(SslErrorHandler handler) {
+            protected void doInBackground(SslErrorHandler... handlers) {
                 try {
                     HttpsURLConnection con = (HttpsURLConnection) new URL(currentUrl).openConnection();
                     con.setConnectTimeout(5000);
                     con.connect();
                 } catch (Exception ex) {
                     Log.e(LOG_TAG, "Error with the site certificate: " + ex.toString());
-                    handler.cancel();
+                    handlers[0].cancel();
                 }
                 // We have verified the certificate used by the site is trusted,
                 // proceed to load the page
-                handler.proceed();
+                handlers[0].proceed();
             }
 
             protected void onPostExecute() {
