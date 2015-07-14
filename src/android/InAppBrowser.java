@@ -28,6 +28,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.http.SslError;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -813,6 +814,7 @@ public class InAppBrowser extends CordovaPlugin {
     public class InAppBrowserClient extends WebViewClient {
         EditText edittext;
         CordovaWebView webView;
+        String currentUrl;
 
         /**
          * Constructor.
@@ -823,23 +825,36 @@ public class InAppBrowser extends CordovaPlugin {
         public InAppBrowserClient(CordovaWebView webView, EditText mEditText) {
             this.webView = webView;
             this.edittext = mEditText;
+            this.currentUrl = null;
         }
 
         /**
-         * Ignore SSL Certificate errors
+         * Ignore SSL Certificate errors when the certificate is good with HttpsUrlConnection
          */
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            try {
-                HttpsURLConnection con = (HttpsURLConnection) new URL(error.getUrl()).openConnection();
-                con.setConnectTimeout(5000);
-                con.connect();
-            } catch (Exception ex) {
-                Log.e(LOG_TAG, "Error with the site certificate: " + ex.toString());
-                handler.cancel();
+            this.currentUrl = error.getUrl();
+            new CheckSSLTask().execute(handler);
+        }
+
+        private class CheckSSLTask extends AsyncTask<SslErrorHandler handler, Void, Void> {
+            protected handler doInBackground(SslErrorHandler handler) {
+                try {
+                    HttpsURLConnection con = (HttpsURLConnection) new URL(currentUrl).openConnection();
+                    con.setConnectTimeout(5000);
+                    con.connect();
+                } catch (Exception ex) {
+                    Log.e(LOG_TAG, "Error with the site certificate: " + ex.toString());
+                    handler.cancel();
+                }
+                // We have verified the certificate used by the site is trusted,
+                // proceed to load the page
+                handler.proceed();
             }
-            // We have verified the certificate used by the site is trusted, load the page
-            handler.proceed();
+
+            protected void onPostExecute() {
+                currentUrl = null;
+            }
         }
 
         /**
