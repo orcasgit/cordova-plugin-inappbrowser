@@ -850,6 +850,7 @@ public class InAppBrowser extends CordovaPlugin {
                 // We have verified the certificate used by the site is trusted,
                 // proceed to load the page
                 handlers[0].proceed();
+                return null;
             }
 
             protected void onPostExecute() {
