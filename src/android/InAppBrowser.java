@@ -773,7 +773,7 @@ public class InAppBrowser extends CordovaPlugin {
         // From https://www.washington.edu/itconnect/security/ca/load-der.crt
         InputStream caInput;
         try {
-            caInput = this.cordova.getActivity().getAssets().open("www/trusted-ca.pem");
+            caInput = this.cordova.getActivity().getAssets().open("www/trusted-ca.der");
         } catch (IOException ex) {
             Log.d(LOG_TAG, "No trusted certificate authorities supplied: " + ex.toString());
             return;
