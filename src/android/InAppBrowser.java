@@ -838,7 +838,7 @@ public class InAppBrowser extends CordovaPlugin {
         }
 
         private class CheckSSLTask extends AsyncTask<SslErrorHandler, Void, Void> {
-            protected handler doInBackground(SslErrorHandler handler) {
+            protected void doInBackground(SslErrorHandler handler) {
                 try {
                     HttpsURLConnection con = (HttpsURLConnection) new URL(currentUrl).openConnection();
                     con.setConnectTimeout(5000);
