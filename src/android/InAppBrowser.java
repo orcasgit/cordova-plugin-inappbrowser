@@ -60,7 +60,6 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -768,15 +767,14 @@ public class InAppBrowser extends CordovaPlugin {
         // (could be from a resource or ByteArrayInputStream or ...)
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         // From https://www.washington.edu/itconnect/security/ca/load-der.crt
-        FileInputStream fileInput;
+        InputStream caInput;
         try {
-            fileInput = new FileInputStream("assets/www/trusted-ca.pem");
-        } catch (FileNotFoundException ex) {
-            Log.d(LOG_TAG, "No trusted certificate authorities supplied");
+            caInput = this.cordova.getActivity().getAssets().open("www/trusted-ca.pem");
+        } catch (IOException ex) {
+            Log.d(LOG_TAG, "No trusted certificate authorities supplied: " + ex.toString());
             return;
         }
         Log.d(LOG_TAG, "Found trusted certificate");
-        InputStream caInput = new BufferedInputStream(fileInput);
         Certificate ca;
         try {
             ca = cf.generateCertificate(caInput);
