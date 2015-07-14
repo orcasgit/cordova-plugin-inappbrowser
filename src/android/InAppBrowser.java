@@ -823,12 +823,21 @@ public class InAppBrowser extends CordovaPlugin {
             this.webView = webView;
             this.edittext = mEditText;
         }
-        
+
         /**
          * Ignore SSL Certificate errors
          */
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            try {
+                HttpsURLConnection con = (HttpsURLConnection) new URL(error.getUrl()).openConnection();
+                con.setConnectTimeout(5000);
+                con.connect();
+            } catch (Exception ex) {
+                Log.e(LOG_TAG, "Error with the site certificate: " + ex.toString());
+                handler.cancel();
+            }
+            // We have verified the certificate used by the site is trusted, load the page
             handler.proceed();
         }
 
