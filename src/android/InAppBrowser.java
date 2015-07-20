@@ -815,6 +815,7 @@ public class InAppBrowser extends CordovaPlugin {
         EditText edittext;
         CordovaWebView webView;
         String currentUrl;
+        ArrayList<String> whiteList;
 
         /**
          * Constructor.
@@ -826,6 +827,7 @@ public class InAppBrowser extends CordovaPlugin {
             this.webView = webView;
             this.edittext = mEditText;
             this.currentUrl = null;
+            this.whiteList = new ArrayList<String>();
         }
 
         /**
@@ -833,8 +835,18 @@ public class InAppBrowser extends CordovaPlugin {
          */
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            this.currentUrl = error.getUrl();
-            new CheckSSLTask().execute(handler);
+            Log.d(LOG_TAG, "We have received an SSL error on this URL: " + error.getUrl());
+            int endIndex = error.getUrl().indexOf("/", 8);
+            endIndex = endIndex == -1 ? (error.getUrl().length() - 1) : endIndex;
+            this.currentUrl = "https://" + error.getUrl().substring(8, endIndex);
+            Log.d(LOG_TAG, "We will verify the certificate on this URL: " + this.currentUrl);
+            if(this.whiteList.contains(this.currentUrl)) {
+                Log.d(LOG_TAG, "Already found the url in the white list, no need to verify it again");
+                handler.proceed();
+            } else {
+                Log.d(LOG_TAG, "The https url was not in the white list, we need to verify it");
+                new CheckSSLTask().execute(handler);
+            }
         }
 
         private class CheckSSLTask extends AsyncTask<SslErrorHandler, Void, Void> {
@@ -848,7 +860,8 @@ public class InAppBrowser extends CordovaPlugin {
                     handlers[0].cancel();
                 }
                 // We have verified the certificate used by the site is trusted,
-                // proceed to load the page
+                // white list the url and proceed to load the page
+                whiteList.add(currentUrl);
                 handlers[0].proceed();
                 return null;
             }
