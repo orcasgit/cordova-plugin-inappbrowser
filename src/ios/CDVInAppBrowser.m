@@ -108,6 +108,11 @@ static NSTimeInterval sAppStartTime;            // since reference date
     _callbackIdPattern = nil;
 }
 
+- (id)settingForKey:(NSString*)key
+{
+    return [self.commandDelegate.settings objectForKey:[key lowercaseString]];
+}
+
 - (void)onReset
 {
     [self close:nil];
@@ -206,8 +211,16 @@ static NSTimeInterval sAppStartTime;            // since reference date
     }
 
     if (self.inAppBrowserViewController == nil) {
-        NSString* originalUA = [CDVUserAgentUtil originalUserAgent];
-        self.inAppBrowserViewController = [[CDVInAppBrowserViewController alloc] initWithUserAgent:originalUA prevUserAgent:[self.commandDelegate userAgent] browserOptions: browserOptions];
+        NSString* userAgent = [CDVUserAgentUtil originalUserAgent];
+        NSString* overrideUserAgent = [self settingForKey:@"OverrideUserAgent"];
+        NSString* appendUserAgent = [self settingForKey:@"AppendUserAgent"];
+        if(overrideUserAgent){
+            userAgent = overrideUserAgent;
+        }
+        if(appendUserAgent){
+            userAgent = [userAgent stringByAppendingString: appendUserAgent];
+        }
+        self.inAppBrowserViewController = [[CDVInAppBrowserViewController alloc] initWithUserAgent:userAgent prevUserAgent:[self.commandDelegate userAgent] browserOptions: browserOptions];
         [self.inAppBrowserViewController setDelegate:self];
         self.inAppBrowserViewController.navigationDelegate = self;
 
@@ -304,6 +317,7 @@ static NSTimeInterval sAppStartTime;            // since reference date
                                    initWithRootViewController:self.inAppBrowserViewController];
     nav.orientationDelegate = self.inAppBrowserViewController;
     nav.navigationBarHidden = YES;
+    nav.modalPresentationStyle = self.inAppBrowserViewController.modalPresentationStyle;
 
     __weak CDVInAppBrowser* weakSelf = self;
 
@@ -334,11 +348,8 @@ static NSTimeInterval sAppStartTime;            // since reference date
 
 - (void)openInSystem:(NSURL*)url
 {
-    if ([[UIApplication sharedApplication] canOpenURL:url]) {
-        [[UIApplication sharedApplication] openURL:url];
-    } else { // handle any custom schemes to plugins
-        [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
-    }
+    [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:CDVPluginHandleOpenURLNotification object:url]];
+    [[UIApplication sharedApplication] openURL:url];
 }
 
 // This is a helper method for the inject{Script|Style}{Code|File} API calls, which
@@ -1303,8 +1314,8 @@ static NSTimeInterval sAppStartTime;            // since reference date
             CGFloat temp = rect.size.width;
             rect.size.width = rect.size.height;
             rect.size.height = temp;
-            rect.origin = CGPointZero;
         }
+        rect.origin = CGPointZero;
     }
     return rect;
 }
