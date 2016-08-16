@@ -17,9 +17,8 @@
  under the License.
  */
 
-// Significant code from AppDelegate.m in the Apple
-// CustomHTTPProtocol example was used here, so we have
-// included the comment block below.
+// Significant code from AppDelegate.m in the Apple CustomHTTPProtocol example
+// was used here, so we have included the comment block below.
 
 /*
  File: AppDelegate.m
@@ -180,14 +179,6 @@ static NSTimeInterval sAppStartTime;            // since reference date
 {
     CDVInAppBrowserOptions* browserOptions = [CDVInAppBrowserOptions parseOptions:options];
 
-    // Initialization required for trusting an additional certificate
-    sAppStartTime = [NSDate timeIntervalSinceReferenceDate];
-    self.threadInfoByThreadID = [[NSMutableDictionary alloc] init];
-    (void) [self threadInfoForCurrentThread];
-    [CustomHTTPProtocol setDelegate:self];
-    [CustomHTTPProtocol start];
-    self.credentialsManager = [[CredentialsManager alloc] init];
-
     if (browserOptions.clearcache) {
         NSHTTPCookie *cookie;
         NSHTTPCookieStorage *storage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
@@ -211,6 +202,16 @@ static NSTimeInterval sAppStartTime;            // since reference date
     }
 
     if (self.inAppBrowserViewController == nil) {
+        // Initialization required for trusting an additional certificate, do
+        // this only once
+        sAppStartTime = [NSDate timeIntervalSinceReferenceDate];
+        self.threadInfoByThreadID = [[NSMutableDictionary alloc] init];
+        (void) [self threadInfoForCurrentThread];
+        [CustomHTTPProtocol setDelegate:self];
+        [CustomHTTPProtocol start];
+        self.credentialsManager = [[CredentialsManager alloc] init];
+
+        // Initialize the in app browser window
         NSString* userAgent = [CDVUserAgentUtil originalUserAgent];
         NSString* overrideUserAgent = [self settingForKey:@"OverrideUserAgent"];
         NSString* appendUserAgent = [self settingForKey:@"AppendUserAgent"];
@@ -236,7 +237,6 @@ static NSTimeInterval sAppStartTime;            // since reference date
             } else {
                 [self.inAppBrowserViewController logWithFormat:@"trusted anchor install did finish"];
             }
-            NSLog([self.credentialsManager.trustedAnchors description]);
         }
 
         if ([self.viewController conformsToProtocol:@protocol(CDVScreenOrientationDelegate)]) {
@@ -294,7 +294,6 @@ static NSTimeInterval sAppStartTime;            // since reference date
     }
 
     [self.inAppBrowserViewController navigateTo:url];
-
     if (!browserOptions.hidden) {
         [self show:nil];
     }

@@ -44,9 +44,9 @@
 /*! For threadInfoByThreadID, each key is an NSNumber holding a thread ID and each
  value is a ThreadInfo object.  The dictionary is protected by @synchronized on
  the app delegate object itself.
- 
+
  In the debugger you can dump this info with:
- 
+
  (lldb) po [[[UIApplication sharedApplication] delegate] threadInfoByThreadID]
  */
 
@@ -118,7 +118,6 @@
 - (void)setCloseButtonTitle:(NSString*)title;
 
 - (id)initWithUserAgent:(NSString*)userAgent prevUserAgent:(NSString*)prevUserAgent browserOptions: (CDVInAppBrowserOptions*) browserOptions;
-- (void)createViews;
 
 @end
 
