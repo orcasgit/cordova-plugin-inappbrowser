@@ -1,9 +1,9 @@
 {
-  "name": "cordova-plugin-inappbrowser",
-  "version": "1.4.1-dev",
-  "description": "Cordova InAppBrowser Plugin",
+  "name": "cordova-plugin-inappbrowser-orcas",
+  "version": "1.4.2-dev",
+  "description": "Cordova InAppBrowser Plugin with additional certificate trust support",
   "cordova": {
-    "id": "cordova-plugin-inappbrowser",
+    "id": "cordova-plugin-inappbrowser-orcas",
     "platforms": [
       "android",
       "amazon-fireos",
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-inappbrowser"
+    "url": "https://github.com/orcasgit/cordova-plugin-inappbrowser"
   },
   "keywords": [
     "cordova",
