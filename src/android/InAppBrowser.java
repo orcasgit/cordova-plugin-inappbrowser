@@ -22,6 +22,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.provider.Browser;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -67,6 +68,7 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -814,30 +816,32 @@ public class InAppBrowser extends CordovaPlugin {
 
     private void addTrustedCA() throws IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException, KeyStoreException {
         Log.d(LOG_TAG, "Adding trusted certificate if it exists");
-        // Load CAs from an InputStream
-        // (could be from a resource or ByteArrayInputStream or ...)
+        // Load CAs from files within www/trusted-ca
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        InputStream caInput;
-        try {
-            caInput = this.cordova.getActivity().getAssets().open("www/trusted-ca.der");
-        } catch (IOException ex) {
-            Log.d(LOG_TAG, "No trusted certificate authorities supplied: " + ex.toString());
-            return;
-        }
-        Log.d(LOG_TAG, "Found trusted certificate");
-        Certificate ca;
-        try {
-            ca = cf.generateCertificate(caInput);
-            Log.d(LOG_TAG, "ca=" + ((X509Certificate) ca).getSubjectDN());
-        } finally {
-            caInput.close();
-        }
-
+        AssetManager assetMan = this.cordova.getActivity().getAssets();
+        String caPath = "www" + File.separator + "trusted-ca";
         // Create a KeyStore containing our trusted CAs
         String keyStoreType = KeyStore.getDefaultType();
         KeyStore keyStore = KeyStore.getInstance(keyStoreType);
         keyStore.load(null, null);
-        keyStore.setCertificateEntry("ca", ca);
+        try {
+            String[] trustedCAs = assetMan.list(caPath);
+        } catch (IOException ex) {
+            Log.d(LOG_TAG, "No trusted certificate authorities supplied: " + ex.toString());
+            return;
+        }
+        for(String trustedCA: trustedCAs) {
+            InputStream caInput = assetMan.open(caPath + File.separator + trustedCA);
+            Log.d(LOG_TAG, "Found trusted certificate");
+            Certificate ca;
+            try {
+                ca = cf.generateCertificate(caInput);
+                Log.d(LOG_TAG, "ca=" + ((X509Certificate) ca).getSubjectDN());
+            } finally {
+                caInput.close();
+            }
+            keyStore.setCertificateEntry(trustedCA, ca);
+        }
 
         // Create a TrustManager that trusts the CAs in our KeyStore
         String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();

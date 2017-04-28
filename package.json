@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-inappbrowser-orcas",
-  "version": "1.4.2-dev",
+  "version": "1.4.3",
   "description": "Cordova InAppBrowser Plugin with additional certificate trust support",
   "cordova": {
     "id": "cordova-plugin-inappbrowser-orcas",
